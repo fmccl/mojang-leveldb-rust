@@ -1,2 +1,1 @@
-# Requires CMake, libclang, snappy
-# For use with minecraft, zstd is needed
+# Requires CMake, libclang, snappy, zlib zstd

@@ -29,8 +29,8 @@ fn main() {
     // Link object files using cc crate
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:rustc-link-lib=static=leveldb");
-    println!("cargo:rustc-link-lib=static=snappy");
-    println!("cargo:rustc-link-lib=static=stdc++");
-    println!("cargo:rustc-link-lib=static=pthread");
+    println!("cargo:rustc-link-lib=z");
+    println!("cargo:rustc-link-lib=zstd");
+    println!("cargo:rustc-link-lib=stdc++");
 
 }
