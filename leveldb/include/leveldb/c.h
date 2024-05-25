@@ -44,7 +44,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "export.h"
+#include "leveldb/export.h"
 
 #ifdef __cplusplus
 extern "C" {
