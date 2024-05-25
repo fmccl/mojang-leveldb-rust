@@ -1,6 +1,6 @@
 mod bindings;
 pub mod error;
 mod test;
-mod db;
+pub mod db;
 
 use db::*;
