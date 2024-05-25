@@ -2,6 +2,7 @@ use std::{ffi::CString, ptr};
 
 use crate::bindings::*;
 use crate::error::*;
+use crate::LevelDBManagedBytes;
 
 pub struct DB {
     raw: *mut leveldb_t,
@@ -12,15 +13,72 @@ pub struct Options {
     pub create_if_missing: bool
 }
 
-impl Into<*mut leveldb_options_t> for Options {
-    fn into(self) -> *mut leveldb_options_t {
+impl From<Options> for *mut leveldb_options_t {
+    fn from(mopts: Options) -> *mut leveldb_options_t {
         unsafe {
             let opts = leveldb_options_create();
-            leveldb_options_set_compression(opts, self.compression.into());
-            leveldb_options_set_create_if_missing(opts, self.create_if_missing.into());
+            leveldb_options_set_compression(opts, mopts.compression.into());
+            leveldb_options_set_create_if_missing(opts, mopts.create_if_missing.into());
             opts
         }
     }
+}
+
+pub struct ReadOptions {
+    pub fill_cache: bool,
+    pub verify_checksums: bool
+}
+
+impl From<ReadOptions> for *mut leveldb_readoptions_t {
+    fn from(value: ReadOptions) -> Self {
+        unsafe {
+            let opts = leveldb_readoptions_create();
+            leveldb_readoptions_set_fill_cache(opts, value.fill_cache.into());
+            leveldb_readoptions_set_verify_checksums(opts, value.verify_checksums.into());
+            return opts;
+        }
+    }
+}
+
+pub struct WriteOptions {
+    pub sync: bool,
+}
+
+impl From<WriteOptions> for *mut leveldb_writeoptions_t {
+    fn from(value: WriteOptions) -> Self {
+        unsafe {
+            let opts = leveldb_writeoptions_create();
+            leveldb_writeoptions_set_sync(opts, value.sync.into());
+            opts
+        }
+    }
+}
+
+
+pub struct WriteBatch {
+    pub raw: *mut leveldb_writebatch_t
+}
+
+impl WriteBatch {
+    pub fn new() -> Self {
+        WriteBatch{raw: unsafe {
+            leveldb_writebatch_create()
+        }}
+    }
+
+    pub fn put(&mut self, key: &[i8], value: &[i8]) {
+        unsafe {
+            leveldb_writebatch_put(self.raw, key.as_ptr(), key.len(), value.as_ptr(), value.len());
+        }
+    }
+}
+
+impl Drop for WriteBatch {
+
+    fn drop(&mut self) {
+        unsafe { leveldb_free(self.raw as *mut _); }
+    }
+
 }
 
 pub enum CompressionType {
@@ -37,7 +95,7 @@ impl Into<i32> for CompressionType {
             CT::None => 0,
             CT::Snappy => 1,
             CT::ZlibRaw => 2,
-            CT::ZStd => 3,
+            CT::ZStd => 4,
         }
     }
 }
@@ -51,16 +109,72 @@ impl DB {
         let mut err: *mut i8 = ptr::null_mut();
         let errptr: *mut *mut i8 = &mut err;
 
-
         unsafe {
             let raw = leveldb_open(opts, db_name_ptr, errptr);
             leveldb_options_destroy(opts);
             if !err.is_null() {
-                leveldb_close(raw);
-                return Err(DBError::Unknown(CString::from_raw(err).to_str().unwrap().to_string()))
+                let err_text = CString::from_raw(err).to_str().unwrap().to_string();
+                if err_text.contains("does not exist") {
+                    return Err(DBError::DatabaseMissing);
+                }
+                return Err(DBError::Unknown(err_text));
             }
             Ok(DB{raw})
         }
+    }
+
+    pub fn get(&self, options: ReadOptions, key: &[i8]) -> Result<Option<LevelDBManagedBytes>, DBError> {
+
+        let opts: *mut leveldb_readoptions_t = options.into();
+
+        unsafe {
+            let mut vallen: usize = 0;
+            let vallen_ptr: *mut usize = &mut vallen;
+
+            let mut err: *mut i8 = ptr::null_mut();
+            let errptr: *mut *mut i8 = &mut err;
+
+            let read = leveldb_get(self.raw, opts, key.as_ptr(), key.len(), vallen_ptr, errptr);
+
+            leveldb_readoptions_destroy(opts);
+
+            if !err.is_null() {
+                let err_text = CString::from_raw(err).to_str().unwrap().to_string();
+                return Err(DBError::Unknown(err_text));
+            }
+
+            Ok(
+                if read.is_null() {
+                    None
+                } else {
+                    Some(LevelDBManagedBytes::new(read, vallen))
+                }
+            )
+        }
+    }
+
+    pub fn write(&self, options: WriteOptions, batch: WriteBatch ) -> Result<(), DBError> {
+
+        let opts: *mut leveldb_writeoptions_t = options.into();
+
+        unsafe {
+
+            let mut err: *mut i8 = ptr::null_mut();
+            let errptr: *mut *mut i8 = &mut err;
+
+            leveldb_write(self.raw, opts, batch.raw, errptr);
+            
+            leveldb_writeoptions_destroy(opts);
+
+            if !err.is_null() {
+                let err_text = CString::from_raw(err).to_str().unwrap().to_string();
+                return Err(DBError::Unknown(err_text));
+            }
+
+            Ok(())
+
+        }
+
     }
 }
 

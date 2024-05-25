@@ -26,11 +26,21 @@ fn main() {
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
 
+    let binding_text = std::fs::read_to_string(out_path.join("bindings.rs"))
+        .expect("Failed to read generated bindings");
+
+    std::fs::write(out_path.join("bindings.rs"), format!("#![allow(non_camel_case_types)]\n\
+    #![allow(non_snake_case)]\n\
+    #![allow(non_upper_case_globals)]\n\
+    #![allow(dead_code)]\n\
+    {}\n", binding_text)).expect("Failed to write to generated bindings");
+
     // Link object files using cc crate
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:rustc-link-lib=static=leveldb");
     println!("cargo:rustc-link-lib=z");
     println!("cargo:rustc-link-lib=zstd");
+    println!("cargo:rustc-link-lib=snappy");
     println!("cargo:rustc-link-lib=stdc++");
 
 }
