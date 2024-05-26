@@ -1,4 +1,4 @@
-use mojang_leveldb_rust::*;
+use mojang_leveldb::*;
 
 fn main() {
     let db = DB::open("db", Options { compression: CompressionType::ZlibRaw, create_if_missing: true }).unwrap();
