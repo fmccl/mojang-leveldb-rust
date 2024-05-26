@@ -30,8 +30,8 @@ else (WIN32)
   set(LEVELDB_PLATFORM_NAME LEVELDB_PLATFORM_POSIX)
 endif (WIN32)
 
-option(LEVELDB_BUILD_TESTS "Build LevelDB's unit tests" ON)
-option(LEVELDB_BUILD_BENCHMARKS "Build LevelDB's benchmarks" ON)
+option(LEVELDB_BUILD_TESTS "Build LevelDB's unit tests" OFF)
+option(LEVELDB_BUILD_BENCHMARKS "Build LevelDB's benchmarks" OFF)
 option(LEVELDB_INSTALL "Install LevelDB's header and library" ON)
 
 include(CheckIncludeFile)
@@ -40,6 +40,7 @@ check_include_file("unistd.h" HAVE_UNISTD_H)
 include(CheckLibraryExists)
 check_library_exists(crc32c crc32c_value "" HAVE_CRC32C)
 check_library_exists(snappy snappy_compress "" HAVE_SNAPPY)
+set(HAVE_SNAPPY OFF)
 check_library_exists(zstd zstd_compress "" HAVE_ZSTD)
 check_library_exists(tcmalloc malloc "" HAVE_TCMALLOC)
 
@@ -284,11 +285,6 @@ endif(HAVE_TCMALLOC)
 # Needed by port_stdcxx.h
 find_package(Threads REQUIRED)
 target_link_libraries(leveldb Threads::Threads)
-
-add_executable(leveldbutil
-  "db/leveldbutil.cc"
-)
-target_link_libraries(leveldbutil leveldb)
 
 if(LEVELDB_BUILD_TESTS)
   enable_testing()

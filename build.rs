@@ -40,7 +40,7 @@ fn main() {
     println!("cargo:rustc-link-lib=static=leveldb");
     println!("cargo:rustc-link-lib=z");
     println!("cargo:rustc-link-lib=zstd");
-    println!("cargo:rustc-link-lib=snappy");
+    //println!("cargo:rustc-link-lib=snappy");
     println!("cargo:rustc-link-lib=stdc++");
 
 }

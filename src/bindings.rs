@@ -591,7 +591,7 @@ extern "C" {
 pub const leveldb_no_compression: _bindgen_ty_1 = 0;
 pub const leveldb_snappy_compression: _bindgen_ty_1 = 1;
 pub const leveldb_zstd_compression: _bindgen_ty_1 = 2;
-pub const leveldb_zlib_raw_compression: _bindgen_ty_1 = 4;
+pub const leveldb_zlib_compression: _bindgen_ty_1 = 4;
 pub type _bindgen_ty_1 = ::std::os::raw::c_uint;
 extern "C" {
     pub fn leveldb_options_set_compression(

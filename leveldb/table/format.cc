@@ -3,6 +3,7 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #include "table/format.h"
+#include <string>
 
 #include "leveldb/env.h"
 #include "leveldb/options.h"
@@ -153,9 +154,23 @@ Status ReadBlock(RandomAccessFile* file, const ReadOptions& options,
       result->cachable = true;
       break;
     }
+    case kZlibCompression: {
+      std::string buffer;
+      if (!port::ZlibRaw_Uncompress(data, n, buffer)) {
+        delete[] buf;
+        return Status::Corruption("corrupted zlib compressed block contents");
+      }
+      auto ubuf = new char[buffer.size()];
+      memcpy(ubuf, buffer.data(), buffer.size());
+      delete[] buf;
+      result->data = Slice(ubuf, buffer.size());
+      result->heap_allocated = true;
+      result->cachable = true;
+      break;
+    }
     default:
       delete[] buf;
-      return Status::Corruption("bad block type");
+      return Status::Corruption("corruption: bad block type " + std::to_string(data[n]));
   }
 
   return Status::OK();

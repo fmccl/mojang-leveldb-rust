@@ -92,10 +92,10 @@ impl Into<i32> for CompressionType {
     fn into(self) -> i32 {
         use CompressionType as CT;
         match self {
-            CT::None => 0,
-            CT::Snappy => 1,
-            CT::ZlibRaw => 2,
-            CT::ZStd => 4,
+            CT::None => leveldb_no_compression.try_into().unwrap(),
+            CT::Snappy => leveldb_snappy_compression.try_into().unwrap(),
+            CT::ZlibRaw => leveldb_zlib_compression.try_into().unwrap(),
+            CT::ZStd => leveldb_zstd_compression.try_into().unwrap(),
         }
     }
 }

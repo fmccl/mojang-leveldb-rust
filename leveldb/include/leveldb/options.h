@@ -28,6 +28,7 @@ enum CompressionType {
   kNoCompression = 0x0,
   kSnappyCompression = 0x1,
   kZstdCompression = 0x2,
+  kZlibCompression = 0x4
 };
 
 // Options to control the behavior of a database (passed to DB::Open)
@@ -134,6 +135,8 @@ struct LEVELDB_EXPORT Options {
   // Compression level for zstd.
   // Currently only the range [-5,22] is supported. Default is 1.
   int zstd_compression_level = 1;
+
+  int zlib_compression_level = -1;
 
   // EXPERIMENTAL: If true, append to existing MANIFEST and log files
   // when a database is opened.  This can significantly speed up open.
