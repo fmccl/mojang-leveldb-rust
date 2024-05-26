@@ -1,3 +1,5 @@
+use std::ffi::c_void;
+use std::ptr::null_mut;
 use std::{ffi::CString, ptr};
 
 use crate::bindings::*;
@@ -71,12 +73,30 @@ impl WriteBatch {
             leveldb_writebatch_put(self.raw, key.as_ptr(), key.len(), value.as_ptr(), value.len());
         }
     }
+
+    pub fn append(&mut self, source: WriteBatch) {
+        unsafe {
+            leveldb_writebatch_append(self.raw, source.raw);
+        }
+    }
+
+    pub fn delete(&mut self, key: &[i8]) {
+        unsafe {
+            leveldb_writebatch_delete(self.raw, key.as_ptr(), key.len());
+        }
+    }
+
+    pub fn clear(&mut self) {
+        unsafe {
+            leveldb_writebatch_clear(self.raw);
+        }
+    }
 }
 
 impl Drop for WriteBatch {
 
     fn drop(&mut self) {
-        unsafe { leveldb_free(self.raw as *mut _); }
+        unsafe { leveldb_writebatch_destroy(self.raw); }
     }
 
 }
