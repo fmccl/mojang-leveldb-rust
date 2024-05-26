@@ -13,8 +13,7 @@ fn main() {
     // LevelDBManagedBytes wrapper is necessary to free these bytes when Dropped because they are allocated in C++
 
     println!("{:?}", x.get()); // [4, 5, 6]
-
-    drop(db);
+    
 }
 
 fn str_to_ascii_i8(s: &str) -> Result<Vec<i8>, &'static str> {
