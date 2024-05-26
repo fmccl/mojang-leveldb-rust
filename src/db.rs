@@ -1,5 +1,3 @@
-use std::ffi::c_void;
-use std::ptr::null_mut;
 use std::{ffi::CString, ptr};
 
 use crate::bindings::*;
