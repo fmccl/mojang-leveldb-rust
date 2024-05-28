@@ -1,1 +1,1 @@
-# Requires CMake, libclang, snappy, zlib zstd
+# Requires CMake, libclang, zlib
