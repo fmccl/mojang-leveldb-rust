@@ -199,7 +199,6 @@ impl DB {
 impl Drop for DB {
     fn drop(&mut self) {
         unsafe {
-            println!("DROPPED");
             leveldb_close(self.raw);
         }
     }

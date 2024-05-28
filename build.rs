@@ -6,7 +6,6 @@ fn main() {
     let zlib_path = cmake::build("zlib");
 
     let mut build = cmake::Config::new("leveldb");
-    build.define("CMAKE_BUILD_TYPE", "Release");
     build.cxxflag("-I".to_string() + &zlib_path.display().to_string() + "/include");
     let dst = build.build();
 
