@@ -39,15 +39,22 @@ fn main() {
     #![allow(dead_code)]\n\
     {}\n", binding_text)).expect("Failed to write to generated bindings");
 
+    let debug = env::var("PROFILE").unwrap() == "debug";
+
     // Link object files using cc crate
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:rustc-link-search=native={}/lib", zlib_path.display());
     println!("cargo:rustc-link-lib=static=leveldb");
-    println!("cargo:rustc-link-lib=static=z");
     if env::consts::FAMILY != "windows" {
         println!("cargo:rustc-link-lib=stdc++");
+    println!("cargo:rustc-link-lib=static=z");
+
     } else {
-        println!("cargo:rustc-link-lib=static=zlibstaticd");
+        if debug {
+            println!("cargo:rustc-link-lib=static=zlibstaticd");
+        } else {
+            println!("cargo:rustc-link-lib=static=zlibstatic");
+        }
         println!("cargo:rustc-link-lib=msvcrt");
     }
 
