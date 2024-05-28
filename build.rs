@@ -5,10 +5,9 @@ use std::path::PathBuf;
 fn main() {
     let zlib_path = cmake::build("zlib");
 
-    println!("cargo:include={}/include", zlib_path.display());
-
     let mut build = cmake::Config::new("leveldb");
     build.define("CMAKE_BUILD_TYPE", "Release");
+    build.cxxflag("-I".to_string() + &zlib_path.display().to_string() + "/include");
     let dst = build.build();
 
 
