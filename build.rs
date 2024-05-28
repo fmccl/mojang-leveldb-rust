@@ -45,9 +45,9 @@ fn main() {
     println!("cargo:rustc-link-lib=static=leveldb");
     if env::consts::FAMILY != "windows" {
         println!("cargo:rustc-link-lib=static=z");
+        println!("cargo:rustc-link-lib=stdc++");
     } else {
         println!("cargo:rustc-link-lib=static=zlibstaticd");        
     }
-    println!("cargo:rustc-link-lib=stdc++");
 
 }
