@@ -43,7 +43,7 @@ fn main() {
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:rustc-link-search=native={}/lib", zlib_path.display());
     println!("cargo:rustc-link-lib=static=leveldb");
-    if (env::consts::FAMILY == "windows") {
+    if env::consts::FAMILY != "windows" {
         println!("cargo:rustc-link-lib=static=z");
     } else {
         println!("cargo:rustc-link-lib=static=zlibstaticd");        
