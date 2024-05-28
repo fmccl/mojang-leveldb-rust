@@ -1,6 +1,6 @@
 extern crate bindgen;
 
-use std::path::PathBuf;
+use std::{env, path::PathBuf};
 
 fn main() {
     let zlib_path = cmake::build("zlib");
@@ -43,7 +43,11 @@ fn main() {
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:rustc-link-search=native={}/lib", zlib_path.display());
     println!("cargo:rustc-link-lib=static=leveldb");
-    println!("cargo:rustc-link-lib=static=z");
+    if (env::consts::FAMILY == "windows") {
+        println!("cargo:rustc-link-lib=static=z");
+    } else {
+        println!("cargo:rustc-link-lib=static=zlibstaticd");        
+    }
     println!("cargo:rustc-link-lib=stdc++");
 
 }
