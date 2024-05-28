@@ -3,12 +3,12 @@ use mojang_leveldb::*;
 fn main() {
     let db = DB::open("db", Options { compression: CompressionType::ZlibRaw, create_if_missing: true }).unwrap();
 
-    let mut wb = WriteBatch::new();
-    wb.put(str_to_ascii_i8("~localplayer").unwrap().as_slice(), &[4,5,6]); // those are &[i8] which maps to C char*, which are bytes
+    // let mut wb = WriteBatch::new();
+    // wb.put(str_to_ascii_i8("~localplayer").unwrap().as_slice(), &[4,5,6]); // those are &[i8] which maps to C char*, which are bytes
 
-    db.write(WriteOptions{sync: true}, wb).unwrap();
+    // db.write(WriteOptions{sync: true}, wb).unwrap();
 
-    let x: LevelDBManagedBytes = db.get(ReadOptions{fill_cache: true, verify_checksums: true}, str_to_ascii_i8("~localplayer").unwrap().as_slice()).unwrap().unwrap();
+    let x: LevelDBManagedBytes = db.get(ReadOptions{fill_cache: true, verify_checksums: true}, str_to_ascii_i8("~local_player").unwrap().as_slice()).unwrap().unwrap();
 
     // LevelDBManagedBytes wrapper is necessary to free these bytes when Dropped because they are allocated in C++
 

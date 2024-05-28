@@ -7,6 +7,8 @@ fn main() {
     build.define("CMAKE_BUILD_TYPE", "Release");
     let dst = build.build();
 
+    let zlib_path = cmake::build("zlib");
+
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
@@ -37,10 +39,9 @@ fn main() {
 
     // Link object files using cc crate
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
+    println!("cargo:rustc-link-search=native={}/lib", zlib_path.display());
     println!("cargo:rustc-link-lib=static=leveldb");
-    println!("cargo:rustc-link-lib=z");
-    println!("cargo:rustc-link-lib=zstd");
-    //println!("cargo:rustc-link-lib=snappy");
+    println!("cargo:rustc-link-lib=static=z");
     println!("cargo:rustc-link-lib=stdc++");
 
 }
