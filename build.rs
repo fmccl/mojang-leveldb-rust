@@ -3,11 +3,14 @@ extern crate bindgen;
 use std::path::PathBuf;
 
 fn main() {
+    let zlib_path = cmake::build("zlib");
+
+    println!("cargo:include={}/include", zlib_path.display());
+
     let mut build = cmake::Config::new("leveldb");
     build.define("CMAKE_BUILD_TYPE", "Release");
     let dst = build.build();
 
-    let zlib_path = cmake::build("zlib");
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
