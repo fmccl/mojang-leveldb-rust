@@ -1,1 +1,1 @@
-# Requires CMake, libclang, zlib
+# Requires CMake, libclang
