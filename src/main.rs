@@ -8,7 +8,7 @@ fn main() {
 
     // db.write(WriteOptions{sync: true}, wb).unwrap();
 
-    let x: LevelDBManagedBytes = db.get(ReadOptions{fill_cache: true, verify_checksums: true}, str_to_ascii_i8("~local_player").unwrap().as_slice()).unwrap().unwrap();
+    let x: LevelDBManagedBytes = db.get(ReadOptions{fill_cache: true, verify_checksums: true}, str_to_ascii_u8("~local_player").unwrap().as_slice()).unwrap().unwrap();
 
     // LevelDBManagedBytes wrapper is necessary to free these bytes when Dropped because they are allocated in C++
 
@@ -16,7 +16,7 @@ fn main() {
     
 }
 
-fn str_to_ascii_i8(s: &str) -> Result<Vec<i8>, &'static str> {
+fn str_to_ascii_u8(s: &str) -> Result<Vec<u8>, &'static str> {
 
     if !s.is_ascii() {
         return Err("Input string contains non-ASCII characters");
@@ -24,7 +24,7 @@ fn str_to_ascii_i8(s: &str) -> Result<Vec<i8>, &'static str> {
 
     let bytes = s.as_bytes();
 
-    let ascii_i8: Vec<i8> = bytes.iter().map(|&b| b as i8).collect();
+    let ascii_u8: Vec<u8> = bytes.iter().map(|&b| b as u8).collect();
 
-    Ok(ascii_i8)
+    Ok(ascii_u8)
 }

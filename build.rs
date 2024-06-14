@@ -16,7 +16,7 @@ fn main() {
     let bindings = bindgen::Builder::default()
         // The input header we would like to generate
         // bindings for.
-        .clang_arg("-Ileveldb/include/")
+        .clang_arg("-Ileveldb/include/")  
         .header("wrapper.h")
         // Finish the builder and generate the bindings.
         .generate()

@@ -1,3 +1,5 @@
+use std::os::raw::c_char;
+
 use crate::bindings::leveldb_free;
 
 pub struct LevelDBManagedBytes {
@@ -20,14 +22,14 @@ impl Drop for LevelDBManagedBytes {
 
 impl LevelDBManagedBytes {
 
-    pub unsafe fn new(data: *mut i8, length: usize) -> LevelDBManagedBytes {
+    pub unsafe fn new(data: *mut c_char, length: usize) -> LevelDBManagedBytes {
         LevelDBManagedBytes { data, length }
     }
 
     pub fn get<'a>(&'a self) -> &'a [i8] {
         unsafe {
             assert!(!self.data.is_null(), "Attempted to access null pointer");
-            std::slice::from_raw_parts(self.data, self.length)
+            std::slice::from_raw_parts(self.data as *mut c_char, self.length)
         }
     }
 

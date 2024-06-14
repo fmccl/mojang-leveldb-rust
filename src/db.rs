@@ -1,3 +1,4 @@
+use std::os::raw::c_char;
 use std::{ffi::CString, ptr};
 
 use crate::bindings::*;
@@ -66,9 +67,9 @@ impl WriteBatch {
         }}
     }
 
-    pub fn put(&mut self, key: &[i8], value: &[i8]) {
+    pub fn put(&mut self, key: &[u8], value: &[u8]) {
         unsafe {
-            leveldb_writebatch_put(self.raw, key.as_ptr(), key.len(), value.as_ptr(), value.len());
+            leveldb_writebatch_put(self.raw, slice_u8_into_char(key).as_ptr(), key.len(), slice_u8_into_char(value).as_ptr(), value.len());
         }
     }
 
@@ -78,9 +79,9 @@ impl WriteBatch {
         }
     }
 
-    pub fn delete(&mut self, key: &[i8]) {
+    pub fn delete(&mut self, key: &[u8]) {
         unsafe {
-            leveldb_writebatch_delete(self.raw, key.as_ptr(), key.len());
+            leveldb_writebatch_delete(self.raw, slice_u8_into_char(key).as_ptr(), key.len());
         }
     }
 
@@ -141,7 +142,7 @@ impl DB {
         }
     }
 
-    pub fn get(&self, options: ReadOptions, key: &[i8]) -> Result<Option<LevelDBManagedBytes>, DBError> {
+    pub fn get(&self, options: ReadOptions, key: &[u8]) -> Result<Option<LevelDBManagedBytes>, DBError> {
 
         let opts: *mut leveldb_readoptions_t = options.into();
 
@@ -152,7 +153,7 @@ impl DB {
             let mut err: *mut i8 = ptr::null_mut();
             let errptr: *mut *mut i8 = &mut err;
 
-            let read = leveldb_get(self.raw, opts, key.as_ptr(), key.len(), vallen_ptr, errptr);
+            let read = leveldb_get(self.raw, opts, slice_u8_into_char(key).as_ptr(), key.len(), vallen_ptr, errptr);
 
             leveldb_readoptions_destroy(opts);
 
@@ -201,5 +202,21 @@ impl Drop for DB {
         unsafe {
             leveldb_close(self.raw);
         }
+    }
+}
+
+pub fn slice_char_into_u8(slice: &[c_char]) -> &[u8] {
+    // Safety: We are ensuring that the conversion respects the length of the slice
+    // and that the underlying data representation remains unchanged.
+    unsafe {
+        std::slice::from_raw_parts(slice.as_ptr() as *const u8, slice.len())
+    }
+}
+
+pub fn slice_u8_into_char(slice: &[u8]) -> &[c_char] {
+    // Safety: We are ensuring that the conversion respects the length of the slice
+    // and that the underlying data representation remains unchanged.
+    unsafe {
+        std::slice::from_raw_parts(slice.as_ptr() as *const c_char, slice.len())
     }
 }
