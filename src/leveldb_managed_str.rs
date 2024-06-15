@@ -29,7 +29,7 @@ impl LevelDBManagedBytes {
     pub fn get<'a>(&'a self) -> &'a [i8] {
         unsafe {
             assert!(!self.data.is_null(), "Attempted to access null pointer");
-            std::slice::from_raw_parts(self.data as *mut c_char, self.length)
+            std::slice::from_raw_parts(self.data as *mut u8, self.length)
         }
     }
 
