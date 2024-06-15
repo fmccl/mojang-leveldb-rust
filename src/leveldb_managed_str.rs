@@ -1,6 +1,6 @@
 use std::os::raw::c_char;
 
-use crate::bindings::leveldb_free;
+use crate::{bindings::leveldb_free, slice_char_into_u8};
 
 pub struct LevelDBManagedBytes {
 
@@ -26,10 +26,10 @@ impl LevelDBManagedBytes {
         LevelDBManagedBytes { data, length }
     }
 
-    pub fn get<'a>(&'a self) -> &'a [i8] {
+    pub fn get<'a>(&'a self) -> &'a [u8] {
         unsafe {
             assert!(!self.data.is_null(), "Attempted to access null pointer");
-            std::slice::from_raw_parts(self.data as *mut u8, self.length)
+            slice_char_into_u8(std::slice::from_raw_parts(self.data as *mut c_char, self.length))
         }
     }
 
