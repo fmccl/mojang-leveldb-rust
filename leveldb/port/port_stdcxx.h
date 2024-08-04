@@ -220,7 +220,7 @@ inline uint32_t AcceleratedCRC32C(uint32_t crc, const char* buf, size_t size) {
 #include <zlib.h>
 
 inline bool ZlibRaw_Compress(int level, const char* input, size_t length,
-                             ::std::string* output){
+                             ::std::string* output) {
   const size_t BUFSIZE = 128 * 1024;
   unsigned char temp_buffer[BUFSIZE];
 
@@ -271,7 +271,8 @@ inline bool ZlibRaw_Compress(int level, const char* input, size_t length,
   return true;
 }
 
-inline bool ZlibRaw_Uncompress(const char* input, size_t length, ::std::string& output) {
+inline bool ZlibRaw_Uncompress(const char* input, size_t length,
+                               ::std::string& output) {
   const int CHUNK = 64 * 1024;
 
   int ret;
@@ -286,7 +287,7 @@ inline bool ZlibRaw_Uncompress(const char* input, size_t length, ::std::string& 
   strm.avail_in = (uint32_t)length;
   strm.next_in = (Bytef*)input;
 
-  ret = inflateInit2(&strm, (true? -15 : 15));
+  ret = inflateInit2(&strm, (true ? -15 : 15));
 
   if (ret != Z_OK) {
     return ret == Z_OK;
@@ -322,7 +323,6 @@ inline bool ZlibRaw_Uncompress(const char* input, size_t length, ::std::string& 
   (void)inflateEnd(&strm);
   return (ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR) == Z_OK;
 }
-
 
 }  // namespace port
 }  // namespace leveldb

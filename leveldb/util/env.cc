@@ -8,9 +8,9 @@
 
 // This workaround can be removed when leveldb::Env::DeleteFile is removed.
 // See env.h for justification.
-#if defined(_WIN32) && defined(LEVELDB_DELETEFILE_UNDEFINED)
-#undef DeleteFile
-#endif
+// #if defined(_WIN32) && defined(LEVELDB_DELETEFILE_UNDEFINED)
+// #undef DeleteFile
+// #endif
 
 namespace leveldb {
 
@@ -106,3 +106,9 @@ Status ReadFileToString(Env* env, const std::string& fname, std::string* data) {
 EnvWrapper::~EnvWrapper() {}
 
 }  // namespace leveldb
+
+#if defined(_WIN32)
+#include "util/env_windows.cc"
+#else
+#include "util/env_posix.cc"
+#endif
