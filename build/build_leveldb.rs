@@ -1,5 +1,3 @@
-use std::fs::copy;
-
 pub fn build_leveldb() {
     cc::Build::new()
         .cpp(true)

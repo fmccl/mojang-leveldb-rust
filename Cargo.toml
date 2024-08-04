@@ -10,6 +10,5 @@ license = "MIT"
 thiserror = "1.0.61"
 
 [build-dependencies]
-cmake = "0.1.50"
 bindgen = "0.69.4"
 cc = "1.1.7"
