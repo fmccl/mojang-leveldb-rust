@@ -1,6 +1,6 @@
 use std::os::raw::c_char;
 use std::{ffi::CString, ptr};
-
+use std::ptr::addr_of_mut;
 use crate::bindings::*;
 use crate::error::*;
 use crate::LevelDBManagedBytes;
@@ -37,6 +37,16 @@ impl From<ReadOptions> for *mut leveldb_readoptions_t {
             leveldb_readoptions_set_fill_cache(opts, value.fill_cache.into());
             leveldb_readoptions_set_verify_checksums(opts, value.verify_checksums.into());
             return opts;
+        }
+    }
+}
+impl From<ReadOptions> for *const leveldb_readoptions_t {
+    fn from(value: ReadOptions) -> Self {
+        unsafe {
+            let opts = leveldb_readoptions_create();
+            leveldb_readoptions_set_fill_cache(opts, value.fill_cache.into());
+            leveldb_readoptions_set_verify_checksums(opts, value.verify_checksums.into());
+            return opts as *const leveldb_readoptions_t;
         }
     }
 }
@@ -193,7 +203,16 @@ impl DB {
             Ok(())
 
         }
+    }
 
+    pub fn iter(&self, options: ReadOptions) -> DBIterator {
+        unsafe {
+            let raw = leveldb_create_iterator(self.raw, options.into());
+            leveldb_iter_seek_to_first(raw);
+            DBIterator {
+                raw
+            }
+        }
     }
 }
 
@@ -220,3 +239,30 @@ pub fn slice_u8_into_char(slice: &[u8]) -> &[c_char] {
         std::slice::from_raw_parts(slice.as_ptr() as *const c_char, slice.len())
     }
 }
+
+pub struct DBIterator {
+    raw: *mut leveldb_iterator_t
+}
+
+impl Iterator for DBIterator {
+    type Item = (LevelDBManagedBytes, LevelDBManagedBytes);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        unsafe {
+            if leveldb_iter_valid(self.raw) > 0 {
+                leveldb_iter_next(self.raw);
+                let mut key_len = 0usize;
+                let key = leveldb_iter_key(self.raw, addr_of_mut!(key_len));
+                let mut val_len = 0usize;
+                let val = leveldb_iter_value(self.raw, addr_of_mut!(val_len));
+                Some((
+                    LevelDBManagedBytes::new(key as *mut c_char, key_len),
+                    LevelDBManagedBytes::new(val as *mut c_char, val_len)
+                ))
+            } else {
+                None
+            }
+        }
+    }
+}
+
