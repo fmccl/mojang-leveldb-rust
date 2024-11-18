@@ -33,4 +33,8 @@ impl LevelDBManagedBytes {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.get().len()
+    }
+
 }
