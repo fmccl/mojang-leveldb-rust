@@ -65,6 +65,16 @@ impl From<WriteOptions> for *mut leveldb_writeoptions_t {
     }
 }
 
+impl From<WriteOptions> for *const leveldb_writeoptions_t {
+    fn from(value: WriteOptions) -> Self {
+        unsafe {
+            let opts = leveldb_writeoptions_create();
+            leveldb_writeoptions_set_sync(opts, value.sync.into());
+            opts as *const leveldb_writeoptions_t
+        }
+    }
+}
+
 
 pub struct WriteBatch {
     pub raw: *mut leveldb_writebatch_t
@@ -211,6 +221,26 @@ impl DB {
             leveldb_iter_seek_to_first(raw);
             DBIterator {
                 raw
+            }
+        }
+    }
+
+    pub fn delete(&self, options: WriteOptions, key: &[u8]) -> Result<(), DBError> {
+        unsafe {
+            let mut err: *mut i8 = ptr::null_mut();
+            let errptr: *mut *mut i8 = &mut err;
+            leveldb_delete(
+                self.raw,
+                options.into(),
+                slice_u8_into_char(key).as_ptr(),
+                key.len(),
+                errptr
+            );
+            if !err.is_null() {
+                let err_text = CString::from_raw(err).to_str().unwrap().to_string();
+                Err(DBError::Unknown(err_text))
+            } else {
+                Ok(())
             }
         }
     }
