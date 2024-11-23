@@ -1,8 +1,9 @@
 use std::os::raw::c_char;
 use std::{ffi::CString, ptr};
-
+use std::ptr::addr_of_mut;
 use crate::bindings::*;
 use crate::error::*;
+use crate::leveldb_managed_str::NonOwnedLevelDBManagedBytes;
 use crate::LevelDBManagedBytes;
 
 pub struct DB {
@@ -40,6 +41,16 @@ impl From<ReadOptions> for *mut leveldb_readoptions_t {
         }
     }
 }
+impl From<ReadOptions> for *const leveldb_readoptions_t {
+    fn from(value: ReadOptions) -> Self {
+        unsafe {
+            let opts = leveldb_readoptions_create();
+            leveldb_readoptions_set_fill_cache(opts, value.fill_cache.into());
+            leveldb_readoptions_set_verify_checksums(opts, value.verify_checksums.into());
+            return opts as *const leveldb_readoptions_t;
+        }
+    }
+}
 
 pub struct WriteOptions {
     pub sync: bool,
@@ -51,6 +62,16 @@ impl From<WriteOptions> for *mut leveldb_writeoptions_t {
             let opts = leveldb_writeoptions_create();
             leveldb_writeoptions_set_sync(opts, value.sync.into());
             opts
+        }
+    }
+}
+
+impl From<WriteOptions> for *const leveldb_writeoptions_t {
+    fn from(value: WriteOptions) -> Self {
+        unsafe {
+            let opts = leveldb_writeoptions_create();
+            leveldb_writeoptions_set_sync(opts, value.sync.into());
+            opts as *const leveldb_writeoptions_t
         }
     }
 }
@@ -193,7 +214,36 @@ impl DB {
             Ok(())
 
         }
+    }
 
+    pub fn iter(&self, options: ReadOptions) -> DBIterator {
+        unsafe {
+            let raw = leveldb_create_iterator(self.raw, options.into());
+            leveldb_iter_seek_to_first(raw);
+            DBIterator {
+                raw
+            }
+        }
+    }
+
+    pub fn delete(&self, options: WriteOptions, key: &[u8]) -> Result<(), DBError> {
+        unsafe {
+            let mut err: *mut i8 = ptr::null_mut();
+            let errptr: *mut *mut i8 = &mut err;
+            leveldb_delete(
+                self.raw,
+                options.into(),
+                slice_u8_into_char(key).as_ptr(),
+                key.len(),
+                errptr
+            );
+            if !err.is_null() {
+                let err_text = CString::from_raw(err).to_str().unwrap().to_string();
+                Err(DBError::Unknown(err_text))
+            } else {
+                Ok(())
+            }
+        }
     }
 }
 
@@ -220,3 +270,38 @@ pub fn slice_u8_into_char(slice: &[u8]) -> &[c_char] {
         std::slice::from_raw_parts(slice.as_ptr() as *const c_char, slice.len())
     }
 }
+
+pub struct DBIterator {
+    raw: *mut leveldb_iterator_t
+}
+
+impl Iterator for DBIterator {
+    type Item = (NonOwnedLevelDBManagedBytes, NonOwnedLevelDBManagedBytes);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        unsafe {
+            if leveldb_iter_valid(self.raw) > 0 {
+                let mut key_len = 0usize;
+                let key = leveldb_iter_key(self.raw, addr_of_mut!(key_len));
+                let mut val_len = 0usize;
+                let val = leveldb_iter_value(self.raw, addr_of_mut!(val_len));
+                leveldb_iter_next(self.raw);
+                Some((
+                    NonOwnedLevelDBManagedBytes::new(key as *mut c_char, key_len),
+                    NonOwnedLevelDBManagedBytes::new(val as *mut c_char, val_len)
+                ))
+            } else {
+                None
+            }
+        }
+    }
+}
+
+impl Drop for DBIterator {
+    fn drop(&mut self) {
+        unsafe {
+            leveldb_iter_destroy(self.raw);
+        }
+    }
+}
+

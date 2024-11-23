@@ -9,6 +9,13 @@ pub struct LevelDBManagedBytes {
     length: usize
 
 }
+pub struct NonOwnedLevelDBManagedBytes {
+
+    data: *mut i8,
+
+    length: usize
+
+}
 
 impl Drop for LevelDBManagedBytes {
 
@@ -17,7 +24,6 @@ impl Drop for LevelDBManagedBytes {
             leveldb_free(self.data as *mut std::ffi::c_void);
         }
     }
-
 }
 
 impl LevelDBManagedBytes {
@@ -33,4 +39,24 @@ impl LevelDBManagedBytes {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.get().len()
+    }
+}
+impl NonOwnedLevelDBManagedBytes {
+
+    pub unsafe fn new(data: *mut c_char, length: usize) -> NonOwnedLevelDBManagedBytes {
+        NonOwnedLevelDBManagedBytes { data, length }
+    }
+
+    pub fn get<'a>(&'a self) -> &'a [u8] {
+        unsafe {
+            assert!(!self.data.is_null(), "Attempted to access null pointer");
+            slice_char_into_u8(std::slice::from_raw_parts(self.data as *mut c_char, self.length))
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.get().len()
+    }
 }

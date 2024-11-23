@@ -1,2 +1,4 @@
 /target
 /test_db
+./src/bindings.rs
+.idea/
