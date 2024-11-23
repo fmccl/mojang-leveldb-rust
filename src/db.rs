@@ -3,6 +3,7 @@ use std::{ffi::CString, ptr};
 use std::ptr::addr_of_mut;
 use crate::bindings::*;
 use crate::error::*;
+use crate::leveldb_managed_str::NonOwnedLevelDBManagedBytes;
 use crate::LevelDBManagedBytes;
 
 pub struct DB {
@@ -275,23 +276,31 @@ pub struct DBIterator {
 }
 
 impl Iterator for DBIterator {
-    type Item = (LevelDBManagedBytes, LevelDBManagedBytes);
+    type Item = (NonOwnedLevelDBManagedBytes, NonOwnedLevelDBManagedBytes);
 
     fn next(&mut self) -> Option<Self::Item> {
         unsafe {
             if leveldb_iter_valid(self.raw) > 0 {
-                leveldb_iter_next(self.raw);
                 let mut key_len = 0usize;
                 let key = leveldb_iter_key(self.raw, addr_of_mut!(key_len));
                 let mut val_len = 0usize;
                 let val = leveldb_iter_value(self.raw, addr_of_mut!(val_len));
+                leveldb_iter_next(self.raw);
                 Some((
-                    LevelDBManagedBytes::new(key as *mut c_char, key_len),
-                    LevelDBManagedBytes::new(val as *mut c_char, val_len)
+                    NonOwnedLevelDBManagedBytes::new(key as *mut c_char, key_len),
+                    NonOwnedLevelDBManagedBytes::new(val as *mut c_char, val_len)
                 ))
             } else {
                 None
             }
+        }
+    }
+}
+
+impl Drop for DBIterator {
+    fn drop(&mut self) {
+        unsafe {
+            leveldb_iter_destroy(self.raw);
         }
     }
 }
