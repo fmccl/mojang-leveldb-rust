@@ -1,6 +1,6 @@
 [package]
 name = "mojang-leveldb"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2021"
 build = "build/main.rs"
 description = "LevelDB with Zlib support for Minecraft"
